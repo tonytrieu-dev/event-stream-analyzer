@@ -25,8 +25,6 @@ public class KeyValueParser implements LineParser
         return fields;
     }
 
-    // Split on spaces, but treat a double-quoted run as one token so spaces
-    // and '=' inside quotes stay in the value.
     private static List<String> tokenize(String line)
     {
         List<String> tokens = new ArrayList<>();
@@ -55,7 +53,6 @@ public class KeyValueParser implements LineParser
         return tokens;
     }
 
-    // Move the built-up token into the list and reset the buffer; no-op if empty.
     private static void flush(List<String> tokens, StringBuilder currentToken)
     {
         if (currentToken.length() == 0)

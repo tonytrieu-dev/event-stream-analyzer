@@ -2,8 +2,7 @@ package com.esa.cli;
 
 import java.nio.file.Path;
 
-// Throws instead of calling System.exit so the parser stays pure and testable;
-// Main owns termination.
+// Throws rather than exiting so the parser stays unit-testable; Main owns termination.
 public class ArgParser
 {
     private static final Path CURRENT_DIRECTORY = Path.of(".");

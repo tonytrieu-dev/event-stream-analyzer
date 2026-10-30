@@ -19,9 +19,6 @@ public final class Main
         System.exit(run(args));
     }
 
-    // Returns the process exit code instead of calling System.exit, so the whole
-    // flow is testable without terminating the JVM. main() is the only caller
-    // that turns the code into an actual exit.
     static int run(String[] args)
     {
         CliOptions options;
