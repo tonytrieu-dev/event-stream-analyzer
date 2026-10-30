@@ -1,0 +1,192 @@
+@startuml EventStreamAnalyzer
+' Event Stream Analyzer - UML Class Diagram
+' NOTE: The CODE is the source of truth. This diagram is design intent / a
+' starting blueprint. As implementation proceeds, if the code finds a better
+' shape, the code wins and this diagram is updated to match reality.
+' Patterns labeled inline: <<Strategy>> for aggregation/parse/output axes,
+' <<Factory>> for classification.
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype ortho
+hide empty members
+
+title Event Stream Analyzer: Class Diagram (Strategy + Factory)
+
+' ======================= ENTRY / PIPELINE =======================
+class Main {
+  + {static} main(args : String[]) : void
+}
+
+class ArgParser {
+  + parse(args : String[]) : CliOptions
+}
+
+class CliOptions {
+  - file : Path
+  - outDir : Path
+  + file() : Path
+  + outDir() : Path
+}
+
+class AnalyzerPipeline {
+  - source : LineParser
+  - factory : RecordFactory
+  - registry : AggregatorRegistry
+  - writer : OutputWriter
+  + run(input : Path, outDir : Path) : void
+}
+
+' ======================= INPUT (Strategy) =======================
+interface LineParser <<Strategy>> {
+  + parse(line : String) : Map<String,String>
+}
+class KeyValueParser {
+  + parse(line : String) : Map<String,String>
+}
+note bottom of KeyValueParser
+  Handles key=value and
+  quoted values with spaces.
+  JSON Lines = future class
+  implementing LineParser,
+  no edits here. (NFR-2)
+end note
+
+' ======================= MODEL =======================
+interface Record {
+  + type() : RecordType
+}
+enum RecordType {
+  SENSOR
+  DEVICE
+  ACCESS
+}
+enum Severity {
+  CRITICAL
+  ERROR
+  WARN
+  INFO
+  --
+  ' declared high -> low;
+  ' natural order drives
+  ' tie-break (FR-14)
+}
+class SensorReading <<record>> {
+  + sensor : String
+  + reading : double
+}
+class DeviceEvent <<record>> {
+  + device : String
+  + severity : Severity
+}
+class AccessRecord <<record>> {
+  + user : String
+  + door : String
+  + granted : boolean
+  + durationMs : int
+}
+
+' ======================= CLASSIFICATION (Factory) =======================
+class RecordFactory <<Factory>> {
+  + classify(fields : Map<String,String>) : Optional<Record>
+}
+note right of RecordFactory
+  The one legitimate type-decision,
+  localized. Returns Optional.empty()
+  for corrupt / unmatched lines =
+  silent skip (FR-7). New record type
+  adds a branch here only.
+end note
+
+' ======================= AGGREGATION (Strategy) =======================
+interface Aggregator <<Strategy>> {
+  + handles() : RecordType
+  + accept(r : Record) : void
+  + result() : Map<String,Object>
+}
+class SensorAggregator {
+  - byName : Map<String,List<Double>>
+  + accept(r : Record) : void
+  + result() : Map<String,Object>
+}
+class DeviceAggregator {
+  - bySeverity : Map<Severity,Integer>
+  - byDevice : Map<String,Map<Severity,Integer>>
+  + accept(r : Record) : void
+  + result() : Map<String,Object>
+}
+class AccessAggregator {
+  - byDoor : Map<String,DoorStats>
+  + accept(r : Record) : void
+  + result() : Map<String,Object>
+}
+class AggregatorRegistry {
+  - byType : Map<RecordType,Aggregator>
+  + register(a : Aggregator) : void
+  + dispatch(r : Record) : void
+  + all() : Collection<Aggregator>
+}
+class Stats <<utility>> {
+  + {static} mean(xs : List<Double>) : double
+  + {static} median(xs : List<Double>) : double
+  + {static} populationStdDev(xs : List<Double>) : double
+  + {static} nearestRankPercentile(sorted : List<Integer>, p : int) : int
+}
+note bottom of Stats
+  median != nearest-rank percentile
+  on even N, by design (FR-18).
+  Separate methods on purpose.
+end note
+
+' ======================= OUTPUT (Strategy) =======================
+interface OutputWriter <<Strategy>> {
+  + write(fileBase : String, data : Map<String,Object>, outDir : Path) : void
+}
+class JsonWriter {
+  - gson : Gson
+  + write(fileBase : String, data : Map<String,Object>, outDir : Path) : void
+}
+note bottom of JsonWriter
+  Pretty 2-space (FR-20).
+  Integers as 40 not 40.0,
+  decimals rounded 1dp (FR-21).
+  Always writes file, {} if empty.
+  CSV = future class
+  implementing OutputWriter. (NFR-3)
+end note
+
+' ======================= RELATIONSHIPS =======================
+Main --> ArgParser
+ArgParser --> CliOptions
+Main --> AnalyzerPipeline
+Main ..> CliOptions
+
+AnalyzerPipeline --> LineParser
+AnalyzerPipeline --> RecordFactory
+AnalyzerPipeline --> AggregatorRegistry
+AnalyzerPipeline --> OutputWriter
+
+LineParser <|.. KeyValueParser
+
+Record <|.. SensorReading
+Record <|.. DeviceEvent
+Record <|.. AccessRecord
+Record --> RecordType
+DeviceEvent --> Severity
+
+RecordFactory ..> Record : creates
+RecordFactory ..> RecordType
+
+Aggregator <|.. SensorAggregator
+Aggregator <|.. DeviceAggregator
+Aggregator <|.. AccessAggregator
+AggregatorRegistry "1" o--> "0..*" Aggregator
+AggregatorRegistry ..> Record
+SensorAggregator ..> Stats
+DeviceAggregator ..> Severity
+AccessAggregator ..> Stats
+
+OutputWriter <|.. JsonWriter
+AnalyzerPipeline ..> OutputWriter : "writes result() per aggregator"
+
+@enduml
