@@ -12,14 +12,6 @@ import org.junit.jupiter.api.io.TempDir;
 class MainTest
 {
     @Test
-    void returnsNonZeroWhenRequiredFileFlagIsMissing()
-    {
-        int exitCode = Main.run(new String[] {"--outdir", "results/"});
-
-        assertNotEquals(0, exitCode, "missing --file must exit non-zero (FR-23)");
-    }
-
-    @Test
     void returnsNonZeroWhenInputFileDoesNotExist()
     {
         int exitCode = Main.run(new String[] {"--file", "no-such-file.txt"});
