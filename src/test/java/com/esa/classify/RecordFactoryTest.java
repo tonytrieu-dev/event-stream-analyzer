@@ -90,6 +90,19 @@ class RecordFactoryTest
     }
 
     @Test
+    void skipsAnAccessLineWhenResultIsNeitherGrantedNorDenied()
+    {
+        Optional<Record> classified = factory.classify(Map.of(
+                "user", "user-42",
+                "door", "door-A",
+                "result", "MAYBE",
+                "duration_ms", "30"));
+
+        assertTrue(classified.isEmpty(),
+                "a result other than GRANTED/DENIED must not classify (FR-6)");
+    }
+
+    @Test
     void skipsACorruptLineWithoutThrowing()
     {
         Optional<Record> classified = factory.classify(Map.of("###CORRUPTED###", "!!!"));

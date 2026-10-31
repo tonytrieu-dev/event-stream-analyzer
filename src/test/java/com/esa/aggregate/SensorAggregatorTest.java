@@ -47,7 +47,8 @@ class SensorAggregatorTest
     @Test
     void wiresEachStatToItsCorrectOutputKey()
     {
-        // Distinct values so a swapped key (e.g. median mapped to average) is visible.
+        // median 20.0, average 30.0, std_dev 21.6 are all distinct, so any key
+        // carrying the wrong stat (e.g. std_dev holding the mean) is visible.
         accept("temp", 10.0);
         accept("temp", 20.0);
         accept("temp", 60.0);
@@ -55,5 +56,6 @@ class SensorAggregatorTest
         Map<String, Object> stats = statsFor("temp");
         assertEquals(20.0, stats.get("median"), "median key must carry the median");
         assertEquals(30.0, stats.get("average"), "average key must carry the mean");
+        assertEquals(21.6, stats.get("std_dev"), "std_dev key must carry the population std dev");
     }
 }

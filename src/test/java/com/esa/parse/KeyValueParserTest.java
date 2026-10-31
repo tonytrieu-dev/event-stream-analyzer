@@ -10,21 +10,13 @@ class KeyValueParserTest
     private final LineParser parser = new KeyValueParser();
 
     @Test
-    void parsesSpaceSeparatedPairsIntoKeyValueMap()
-    {
-        Map<String, String> parsedFields = parser.parse("k=v a=b");
-
-        assertEquals(Map.of("k", "v", "a", "b"), parsedFields);
-    }
-
-    @Test
-    void keepsSpacesInsideAQuotedValueAsASingleValue()
+    void keepsSpacesInsideAQuotedValueAndExtractsEveryPairExactly()
     {
         Map<String, String> parsedFields = parser.parse("severity=INFO msg=\"Heartbeat OK\"");
 
-        assertEquals("Heartbeat OK", parsedFields.get("msg"),
-                "a double-quoted value must keep its spaces as one value");
-        assertEquals("INFO", parsedFields.get("severity"));
+        // Full-map assertion: every pair is extracted, nothing spurious is added,
+        // and the quoted value keeps its space as one value.
+        assertEquals(Map.of("severity", "INFO", "msg", "Heartbeat OK"), parsedFields);
     }
 
     @Test
