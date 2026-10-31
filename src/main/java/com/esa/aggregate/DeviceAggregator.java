@@ -32,6 +32,11 @@ public class DeviceAggregator implements Aggregator
     @Override
     public Map<String, Object> result()
     {
+        if (countsBySeverity.isEmpty())
+        {
+            return Map.of();
+        }
+
         Map<String, Object> bySeverity = new LinkedHashMap<>();
         for (Map.Entry<Severity, Integer> entry : countsBySeverity.entrySet())
         {
