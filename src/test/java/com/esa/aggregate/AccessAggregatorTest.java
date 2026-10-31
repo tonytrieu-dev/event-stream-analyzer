@@ -1,8 +1,6 @@
 package com.esa.aggregate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.esa.model.AccessRecord;
 import java.util.List;
@@ -36,25 +34,30 @@ class AccessAggregatorTest
         accept("u1", "door-A", true, 30);
         accept("u2", "door-A", true, 12);
         accept("u3", "door-A", false, 60);
+        accept("u1", "door-B", true, 99);
 
         assertEquals(12, decisionTimes("door-A").get("min"));
         assertEquals(60, decisionTimes("door-A").get("max"));
+        assertEquals(99, decisionTimes("door-B").get("min"));
+        assertEquals(99, decisionTimes("door-B").get("max"));
     }
 
     @Test
     void usesNearestRankPercentilesWhichDifferFromTheMedian()
     {
-        // N=10: p50=35, p90=55, p99=60 are all distinct (so a swapped percentile
-        // key is visible), and p50 (35) differs from the median (37.5) (FR-18).
-        for (int duration : new int[] {10, 20, 28, 30, 35, 40, 45, 50, 55, 60})
+        for (int duration : new int[] {60, 10, 45, 28, 55, 20, 40, 50, 30, 35})
         {
             accept("u", "door-A", true, duration);
         }
+
+        accept("u", "door-B", true, 99);
 
         assertEquals(35, decisionTimes("door-A").get("50_percentile"),
                 "p50 must be nearest-rank (35), not the median (37.5) (FR-18)");
         assertEquals(55, decisionTimes("door-A").get("90_percentile"));
         assertEquals(60, decisionTimes("door-A").get("99_percentile"));
+        assertEquals(Map.of("min", 99, "50_percentile", 99, "90_percentile", 99,
+                "99_percentile", 99, "max", 99), decisionTimes("door-B"));
     }
 
     @Test
@@ -63,11 +66,13 @@ class AccessAggregatorTest
         accept("u1", "door-A", true, 10);
         accept("u2", "door-A", true, 10);
         accept("u3", "door-A", false, 10);
+        accept("u1", "door-B", false, 10);
 
         @SuppressWarnings("unchecked")
         Map<String, Object> results = (Map<String, Object>) door("door-A").get("results");
         assertEquals(2, results.get("GRANTED"));
         assertEquals(1, results.get("DENIED"));
+        assertEquals(Map.of("GRANTED", 0, "DENIED", 1), door("door-B").get("results"));
     }
 
     @Test
@@ -79,9 +84,13 @@ class AccessAggregatorTest
         accept("thrice", "door-A", false, 10);
         accept("thrice", "door-A", false, 10);
 
-        @SuppressWarnings("unchecked")
-        List<String> flagged = (List<String>) door("door-A").get("flagged_users");
-        assertTrue(flagged.contains("thrice"), "3 denials must flag the user (FR-17)");
-        assertFalse(flagged.contains("twice"), "2 denials must NOT flag the user (boundary)");
+        accept("twice", "door-B", false, 10);
+        accept("thrice", "door-B", false, 10);
+        accept("granted-only", "door-A", true, 10);
+        accept("granted-only", "door-A", true, 10);
+        accept("granted-only", "door-A", true, 10);
+
+        assertEquals(List.of("thrice"), door("door-A").get("flagged_users"));
+        assertEquals(List.of(), door("door-B").get("flagged_users"));
     }
 }

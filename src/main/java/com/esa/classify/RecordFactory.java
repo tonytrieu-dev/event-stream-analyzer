@@ -88,7 +88,7 @@ public class RecordFactory
     {
         try
         {
-            return Optional.of(Double.parseDouble(text));
+            return Optional.of(Double.parseDouble(text)).filter(Double::isFinite);
         }
         catch (NumberFormatException notANumber)
         {

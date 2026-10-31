@@ -45,13 +45,11 @@ class SensorAggregatorTest
     }
 
     @Test
-    void wiresEachStatToItsCorrectOutputKey()
+    void reportsDistinctStatisticsFromUnsortedReadings()
     {
-        // median 20.0, average 30.0, std_dev 21.6 are all distinct, so any key
-        // carrying the wrong stat (e.g. std_dev holding the mean) is visible.
+        accept("temp", 60.0);
         accept("temp", 10.0);
         accept("temp", 20.0);
-        accept("temp", 60.0);
 
         Map<String, Object> stats = statsFor("temp");
         assertEquals(20.0, stats.get("median"), "median key must carry the median");

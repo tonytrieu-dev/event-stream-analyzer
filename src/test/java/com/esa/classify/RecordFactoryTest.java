@@ -30,20 +30,24 @@ class RecordFactoryTest
     }
 
     @Test
-    void skipsASensorLineWhenTheReadingIsNotNumeric()
+    void skipsASensorLineWhenTheReadingIsNotAFiniteNumber()
     {
-        Optional<Record> classified =
-                factory.classify(Map.of("sensor", "temperature_celsius", "reading", "abc"));
+        for (String invalidReading : new String[] {"abc", "NaN", "Infinity", "-Infinity", "1e309"})
+        {
+            Optional<Record> classified = factory.classify(Map.of(
+                    "sensor", "temperature_celsius", "reading", invalidReading));
 
-        assertTrue(classified.isEmpty(),
-                "a non-numeric reading must not classify as a sensor reading (FR-7)");
+            assertTrue(classified.isEmpty(), "invalid sensor reading: " + invalidReading);
+        }
     }
 
     @Test
-    void classifiesADeviceEventWhenSeverityAndDeviceArePresent()
+    void classifiesADeviceEventAndIgnoresExtraFields()
     {
         Optional<Record> classified =
-                factory.classify(Map.of("severity", "ERROR", "device", "door-lock-07"));
+                factory.classify(Map.of(
+                        "severity", "ERROR", "device", "door-lock-07",
+                        "msg", "Latch jammed", "code", "E41"));
 
         DeviceEvent event = assertInstanceOf(DeviceEvent.class, classified.orElseThrow());
         assertEquals("door-lock-07", event.device());
@@ -109,19 +113,5 @@ class RecordFactoryTest
 
         assertTrue(classified.isEmpty(),
                 "a line matching no type must be skipped silently, not throw (FR-7)");
-    }
-
-    @Test
-    void ignoresExtraKeysBeyondThoseRequired()
-    {
-        Optional<Record> classified = factory.classify(Map.of(
-                "severity", "ERROR",
-                "device", "door-lock-07",
-                "msg", "Latch jammed",
-                "code", "E41"));
-
-        DeviceEvent event = assertInstanceOf(DeviceEvent.class, classified.orElseThrow());
-        assertEquals("door-lock-07", event.device(),
-                "extra keys must be ignored, not block classification (FR-8)");
     }
 }
