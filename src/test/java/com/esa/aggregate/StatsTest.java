@@ -26,8 +26,7 @@ class StatsTest
     @Test
     void populationStandardDeviationDividesByNNotNMinusOne()
     {
-        // For {2,4,4,4,5,5,7,9}: population (/N) = 2.0, sample (/N-1) = ~2.138.
-        // Asserting 2.0 means a /N-1 bug produces a different number and fails (FR-10).
+        // Population (/N) = 2.0; sample (/N-1) = ~2.14, so a /N-1 bug fails here (FR-10).
         double stdDev = Stats.populationStdDev(List.of(2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0));
 
         assertEquals(2.0, stdDev, EXACT, "std dev must divide by N, not N-1 (FR-10)");
@@ -37,5 +36,17 @@ class StatsTest
     void meanIsTheArithmeticAverage()
     {
         assertEquals(5.0, Stats.mean(List.of(2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0)), EXACT);
+    }
+
+    @Test
+    void nearestRankPercentileUsesCeilIndexAndDiffersFromTheMedian()
+    {
+        // p50 nearest-rank = 28, but the median would be 29: they must differ (FR-18).
+        List<Integer> durations = List.of(12, 20, 28, 30, 35, 60);
+
+        assertEquals(28, Stats.nearestRankPercentile(durations, 50),
+                "nearest-rank p50 is sorted[ceil(p/100*N)-1], not the median (FR-18)");
+        assertEquals(60, Stats.nearestRankPercentile(durations, 90));
+        assertEquals(60, Stats.nearestRankPercentile(durations, 99));
     }
 }
