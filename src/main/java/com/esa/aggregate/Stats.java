@@ -16,7 +16,20 @@ public final class Stats
         {
             sum += value;
         }
-        return sum / values.size();
+        if (Double.isFinite(sum))
+        {
+            return sum / values.size();
+        }
+
+        // Normalize only when the intermediate sum exceeds the double range.
+        double scale = maxMagnitude(values);
+        double normalizedSum = 0.0;
+        for (double value : values)
+        {
+            normalizedSum += value / scale;
+        }
+        double normalizedMean = normalizedSum / values.size();
+        return Math.max(-1.0, Math.min(1.0, normalizedMean)) * scale;
     }
 
     public static double median(List<Double> values)
@@ -30,7 +43,10 @@ public final class Stats
         {
             return sorted.get(middle);
         }
-        return (sorted.get(middle - 1) + sorted.get(middle)) / 2.0;
+        double lower = sorted.get(middle - 1);
+        double upper = sorted.get(middle);
+        double sum = lower + upper;
+        return Double.isFinite(sum) ? sum / 2.0 : lower / 2.0 + upper / 2.0;
     }
 
     public static double populationStdDev(List<Double> values)
@@ -42,7 +58,31 @@ public final class Stats
             double deviation = value - mean;
             sumOfSquaredDeviations += deviation * deviation;
         }
-        return Math.sqrt(sumOfSquaredDeviations / values.size());
+        if (Double.isFinite(sumOfSquaredDeviations))
+        {
+            return Math.sqrt(sumOfSquaredDeviations / values.size());
+        }
+
+        double scale = maxMagnitude(values);
+        double normalizedMean = mean / scale;
+        double normalizedSum = 0.0;
+        for (double value : values)
+        {
+            double deviation = value / scale - normalizedMean;
+            normalizedSum += deviation * deviation;
+        }
+        // Population standard deviation cannot exceed the largest absolute input.
+        return Math.sqrt(Math.min(1.0, normalizedSum / values.size())) * scale;
+    }
+
+    private static double maxMagnitude(List<Double> values)
+    {
+        double maximum = 0.0;
+        for (double value : values)
+        {
+            maximum = Math.max(maximum, Math.abs(value));
+        }
+        return maximum;
     }
 
     // Nearest-rank, deliberately not the median for even N (FR-18).

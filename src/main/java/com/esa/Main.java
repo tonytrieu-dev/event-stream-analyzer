@@ -1,9 +1,23 @@
 package com.esa;
 
+import com.esa.aggregate.AccessAggregator;
+import com.esa.aggregate.Aggregator;
+import com.esa.aggregate.DeviceAggregator;
+import com.esa.aggregate.SensorAggregator;
+import com.esa.classify.RecordFactory;
 import com.esa.cli.ArgParser;
 import com.esa.cli.CliException;
 import com.esa.cli.CliOptions;
+import com.esa.output.JsonWriter;
+import com.esa.parse.KeyValueParser;
+import com.esa.pipeline.AnalyzerPipeline;
+import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public final class Main
 {
@@ -21,23 +35,47 @@ public final class Main
 
     static int run(String[] args)
     {
-        CliOptions options;
         try
         {
-            options = new ArgParser().parse(args);
+            CliOptions options = new ArgParser().parse(args);
+            if (!Files.isRegularFile(options.inputFile()))
+            {
+                return fail("Input file does not exist: " + options.inputFile());
+            }
+
+            Map<String, Aggregator> outputs = Map.of("sensors", new SensorAggregator(),
+                    "devices", new DeviceAggregator(), "access", new AccessAggregator());
+            List<Path> checkedOutputs = new ArrayList<>();
+            for (String name : outputs.keySet())
+            {
+                Path output = options.outputDir().resolve(name + ".json");
+                if (Files.isSymbolicLink(output) && !Files.exists(output))
+                {
+                    return fail("Output is a dangling symbolic link: " + output);
+                }
+                if (Files.exists(output) && Files.isSameFile(options.inputFile(), output))
+                {
+                    return fail("Input file conflicts with output: " + output);
+                }
+                for (Path checked : checkedOutputs)
+                {
+                    if (Files.exists(output) && Files.exists(checked) && Files.isSameFile(output, checked))
+                    {
+                        return fail("Output files conflict: " + output + " and " + checked);
+                    }
+                }
+                checkedOutputs.add(output);
+            }
+
+            AnalyzerPipeline pipeline = new AnalyzerPipeline(new KeyValueParser(), new RecordFactory(),
+                    outputs, new JsonWriter());
+            pipeline.run(options.inputFile(), options.outputDir());
+            return EXIT_SUCCESS;
         }
-        catch (CliException error)
+        catch (CliException | InvalidPathException | IOException error)
         {
             return fail(error.getMessage());
         }
-
-        if (!Files.isRegularFile(options.inputFile()))
-        {
-            return fail("Input file does not exist: " + options.inputFile());
-        }
-
-        // TODO (Phase 2+): wire pipeline here (parse -> classify -> aggregate -> write).
-        return EXIT_SUCCESS;
     }
 
     private static int fail(String message)

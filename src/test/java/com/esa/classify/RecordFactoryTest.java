@@ -9,6 +9,8 @@ import com.esa.model.DeviceEvent;
 import com.esa.model.Record;
 import com.esa.model.SensorReading;
 import com.esa.model.Severity;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -109,6 +111,18 @@ class RecordFactoryTest
     @Test
     void skipsACorruptLineWithoutThrowing()
     {
+        for (Map<String, String> complete : List.of(
+                Map.of("sensor", "temp", "reading", "21.5"),
+                Map.of("device", "lock", "severity", "ERROR"),
+                Map.of("user", "alice", "door", "A", "result", "GRANTED", "duration_ms", "30")))
+        {
+            for (String required : complete.keySet())
+            {
+                Map<String, String> incomplete = new HashMap<>(complete);
+                incomplete.remove(required);
+                assertTrue(factory.classify(incomplete).isEmpty(), "missing required field: " + required);
+            }
+        }
         Optional<Record> classified = factory.classify(Map.of("###CORRUPTED###", "!!!"));
 
         assertTrue(classified.isEmpty(),

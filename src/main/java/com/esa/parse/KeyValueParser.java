@@ -49,6 +49,10 @@ public class KeyValueParser implements LineParser
             currentToken.append(character);
         }
 
+        if (inQuotes)
+        {
+            return List.of();
+        }
         flush(tokens, currentToken);
         return tokens;
     }

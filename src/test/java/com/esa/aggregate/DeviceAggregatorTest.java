@@ -41,16 +41,6 @@ class DeviceAggregatorTest
     }
 
     @Test
-    void reportsThePerDeviceEventTotal()
-    {
-        accept("thermostat-01", Severity.INFO);
-        accept("thermostat-01", Severity.INFO);
-        accept("thermostat-01", Severity.WARN);
-
-        assertEquals(3, device("thermostat-01").get("total"));
-    }
-
-    @Test
     void breaksATieByChoosingTheHighestSeverityRegardlessOfOrderSeen()
     {
         // INFO is accepted first but ERROR is higher severity, so ERROR must win
@@ -71,6 +61,7 @@ class DeviceAggregatorTest
         accept("sensor-hub", Severity.INFO);
         accept("sensor-hub", Severity.CRITICAL);
 
+        assertEquals(3, device("sensor-hub").get("total"));
         assertEquals("INFO", device("sensor-hub").get("most_frequent_severity"),
                 "a higher count must beat a higher severity");
     }

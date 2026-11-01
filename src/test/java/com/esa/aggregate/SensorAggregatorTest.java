@@ -34,17 +34,6 @@ class SensorAggregatorTest
     }
 
     @Test
-    void reportsTheMinimumAndMaximumReading()
-    {
-        accept("temp", 10.0);
-        accept("temp", 40.0);
-        accept("temp", 25.0);
-
-        assertEquals(10.0, statsFor("temp").get("minimum"));
-        assertEquals(40.0, statsFor("temp").get("maximum"));
-    }
-
-    @Test
     void reportsDistinctStatisticsFromUnsortedReadings()
     {
         accept("temp", 60.0);
@@ -52,8 +41,11 @@ class SensorAggregatorTest
         accept("temp", 20.0);
 
         Map<String, Object> stats = statsFor("temp");
+        assertEquals(10.0, stats.get("minimum"));
+        assertEquals(60.0, stats.get("maximum"));
         assertEquals(20.0, stats.get("median"), "median key must carry the median");
         assertEquals(30.0, stats.get("average"), "average key must carry the mean");
-        assertEquals(21.6, stats.get("std_dev"), "std_dev key must carry the population std dev");
+        assertEquals(21.602468994692867, (double) stats.get("std_dev"), 1e-12,
+                "std_dev key must carry the population std dev");
     }
 }

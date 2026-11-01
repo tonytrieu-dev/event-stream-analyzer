@@ -17,11 +17,19 @@ class StatsTest
     }
 
     @Test
-    void populationStandardDeviationDividesByNNotNMinusOne()
+    void keepsRepresentableStatisticsFiniteForLargeReadings()
     {
-        // Population (/N) = 2.0; sample (/N-1) = ~2.14, so a /N-1 bug fails here (FR-10).
-        double stdDev = Stats.populationStdDev(List.of(2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0));
+        for (double magnitude : new double[] {1e155, 1e308, Double.MAX_VALUE})
+        {
+            List<Double> opposite = List.of(magnitude, -magnitude);
+            assertEquals(0.0, Stats.mean(opposite));
+            assertEquals(0.0, Stats.median(opposite));
+            assertEquals(magnitude, Stats.populationStdDev(opposite), magnitude * 1e-14);
 
-        assertEquals(2.0, stdDev, EXACT, "std dev must divide by N, not N-1 (FR-10)");
+            List<Double> identical = List.of(magnitude, magnitude);
+            assertEquals(magnitude, Stats.mean(identical));
+            assertEquals(magnitude, Stats.median(identical));
+            assertEquals(0.0, Stats.populationStdDev(identical));
+        }
     }
 }

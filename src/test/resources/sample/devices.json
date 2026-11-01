@@ -1,0 +1,7 @@
+{
+  "by_severity": {"CRITICAL": 1, "ERROR": 1, "WARN": 1, "INFO": 1},
+  "by_device": {
+    "thermostat-01": {"total": 2, "most_frequent_severity": "WARN"},
+    "door-lock-07": {"total": 2, "most_frequent_severity": "CRITICAL"}
+  }
+}

@@ -12,19 +12,19 @@ class KeyValueParserTest
     @Test
     void keepsSpacesInsideAQuotedValueAndExtractsEveryPairExactly()
     {
-        Map<String, String> parsedFields = parser.parse("severity=INFO msg=\"Heartbeat OK\"");
+        Map<String, String> parsedFields = parser.parse("severity=INFO msg=\"Heartbeat a=b OK\"");
 
         // Full-map assertion: every pair is extracted, nothing spurious is added,
         // and the quoted value keeps its space as one value.
-        assertEquals(Map.of("severity", "INFO", "msg", "Heartbeat OK"), parsedFields);
+        assertEquals(Map.of("severity", "INFO", "msg", "Heartbeat a=b OK"), parsedFields);
     }
 
     @Test
-    void doesNotSplitOnAnEqualsSignInsideAQuotedValue()
+    void rejectsTheWholeLineWhenAQuotedValueIsUnfinished()
     {
-        Map<String, String> parsedFields = parser.parse("msg=\"a=b\"");
-
-        assertEquals("a=b", parsedFields.get("msg"),
-                "split must happen on the first = only, not on = inside a quoted value");
+        assertEquals(Map.of(), parser.parse("severity=INFO device=\"broken lock"));
+        assertEquals(Map.of(), parser.parse("sensor=temp reading=20 msg=\"broken"));
+        assertEquals(Map.of("device", "lock", "severity", "INFO"),
+                parser.parse("device=lock severity=INFO"));
     }
 }

@@ -22,7 +22,7 @@ dependency-reduced-pom.xml
 Thumbs.db
 
 # Local test input/output used while running the CLI by hand
-events.txt
+/events.txt
 results/
 
 # Local, non-deliverable working notes (kept on Desktop, not in repo)

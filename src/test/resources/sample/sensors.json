@@ -1,0 +1,4 @@
+{
+  "temperature_celsius": {"count": 2, "minimum": 21.5, "median": 23.3, "average": 23.3, "maximum": 25, "std_dev": 1.8},
+  "humidity_percent": {"count": 1, "minimum": 45, "median": 45, "average": 45, "maximum": 45, "std_dev": 0}
+}

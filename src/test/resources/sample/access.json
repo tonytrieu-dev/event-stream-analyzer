@@ -1,0 +1,12 @@
+{
+  "door-A": {
+    "decision_times": {"min": 18, "50_percentile": 28, "90_percentile": 35, "99_percentile": 35, "max": 35},
+    "results": {"GRANTED": 1, "DENIED": 3},
+    "flagged_users": ["user-42"]
+  },
+  "door-B": {
+    "decision_times": {"min": 12, "50_percentile": 12, "90_percentile": 12, "99_percentile": 12, "max": 12},
+    "results": {"GRANTED": 1, "DENIED": 0},
+    "flagged_users": []
+  }
+}

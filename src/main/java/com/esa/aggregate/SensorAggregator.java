@@ -43,16 +43,11 @@ public class SensorAggregator implements Aggregator
     {
         Map<String, Object> stats = new LinkedHashMap<>();
         stats.put("count", readings.size());
-        stats.put("minimum", round(Collections.min(readings)));
-        stats.put("median", round(Stats.median(readings)));
-        stats.put("average", round(Stats.mean(readings)));
-        stats.put("maximum", round(Collections.max(readings)));
-        stats.put("std_dev", round(Stats.populationStdDev(readings)));
+        stats.put("minimum", Collections.min(readings));
+        stats.put("median", Stats.median(readings));
+        stats.put("average", Stats.mean(readings));
+        stats.put("maximum", Collections.max(readings));
+        stats.put("std_dev", Stats.populationStdDev(readings));
         return stats;
-    }
-
-    private static double round(double value)
-    {
-        return Math.round(value * 10.0) / 10.0;
     }
 }

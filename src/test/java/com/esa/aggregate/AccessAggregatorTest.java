@@ -29,20 +29,6 @@ class AccessAggregatorTest
     }
 
     @Test
-    void reportsMinimumAndMaximumDurationPerDoor()
-    {
-        accept("u1", "door-A", true, 30);
-        accept("u2", "door-A", true, 12);
-        accept("u3", "door-A", false, 60);
-        accept("u1", "door-B", true, 99);
-
-        assertEquals(12, decisionTimes("door-A").get("min"));
-        assertEquals(60, decisionTimes("door-A").get("max"));
-        assertEquals(99, decisionTimes("door-B").get("min"));
-        assertEquals(99, decisionTimes("door-B").get("max"));
-    }
-
-    @Test
     void usesNearestRankPercentilesWhichDifferFromTheMedian()
     {
         for (int duration : new int[] {60, 10, 45, 28, 55, 20, 40, 50, 30, 35})
@@ -52,6 +38,8 @@ class AccessAggregatorTest
 
         accept("u", "door-B", true, 99);
 
+        assertEquals(10, decisionTimes("door-A").get("min"));
+        assertEquals(60, decisionTimes("door-A").get("max"));
         assertEquals(35, decisionTimes("door-A").get("50_percentile"),
                 "p50 must be nearest-rank (35), not the median (37.5) (FR-18)");
         assertEquals(55, decisionTimes("door-A").get("90_percentile"));
