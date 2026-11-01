@@ -8,24 +8,37 @@ can continue through the rest of the file.
 
 ## Build and run
 
-The application requires Java 17 or later and Maven. Gson is the only third-party
-library used by the application. Tests use JUnit 5.
+Install Java 17 or later and Maven. From the repository root, build the runnable
+JAR and run the full test suite:
 
 ```sh
 mvn clean verify
+```
+
+Run the included sample to write reports into `results/`:
+
+```sh
 java -jar target/analyzer.jar --file src/test/resources/sample/events.txt --outdir results
 ```
 
-The `--file` argument is required. The `--outdir` argument is optional and defaults
-to the current directory. Each run writes `sensors.json`, `devices.json`, and
-`access.json`. A category with no records still produces a file containing exactly
-`{}`. JSON reports use two-space indentation.
+Replace the sample path with your own input file. Paths containing spaces must be
+quoted.
 
-CLI and file errors produce a message on stderr and a nonzero exit code. Before
-processing starts, the application checks that no report would overwrite the
-input or share a file with another report. These checks include symbolic links
-and hard links. Dangling report symlinks are rejected before any reports are
-written.
+| Argument | Required | Purpose |
+|---|---|---|
+| `--file <path>` | Yes | Input event file. |
+| `--outdir <directory>` | No | Report directory; defaults to the current directory. |
+
+The application creates the output directory if needed and writes `sensors.json`,
+`devices.json`, and `access.json`, replacing existing reports. Reports use
+two-space indentation. A category with no valid records produces exactly `{}`.
+
+Invalid arguments and file errors print a message to stderr and return a nonzero
+exit code. Before processing, the application rejects report paths that point to
+the input file or to another report, including symbolic and hard links. It also
+rejects symbolic links whose targets do not exist.
+
+Maven manages the dependencies: Gson for JSON output and JUnit 5 for tests.
 
 ## Statistical methods
 
