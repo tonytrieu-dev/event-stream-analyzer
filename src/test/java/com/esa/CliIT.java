@@ -191,12 +191,15 @@ class CliIT
     }
 
     @Test
-    void skipsBrokenQuotesAndWritesFiniteStatisticsForExtremeReadings() throws Exception
+    void skipsBrokenQuotesAndWritesCorrectStatisticsForDecimalAndExtremeReadings() throws Exception
     {
         Files.writeString(workingDirectory.resolve("events.txt"),
                 "severity=INFO device=\"broken lock\n"
                 + "sensor=opposite reading=1e155\nsensor=opposite reading=-1e155\n"
                 + "sensor=identical reading=1e308\nsensor=identical reading=1e308\n"
+                + "sensor=decimal reading=0.6\nsensor=decimal reading=0.7\n"
+                + "sensor=negative reading=-0.6\nsensor=negative reading=-0.7\n"
+                + "sensor=below reading=0.6\nsensor=below reading=0.699999999\n"
                 + "severity=INFO device=lock\n");
 
         Process process = launch("--file", "events.txt");
@@ -209,6 +212,14 @@ class CliIT
         assertEquals(1e308, sensors.getAsJsonObject("identical").get("average").getAsDouble());
         assertEquals(1e308, sensors.getAsJsonObject("identical").get("median").getAsDouble());
         assertEquals(0.0, sensors.getAsJsonObject("identical").get("std_dev").getAsDouble());
+        for (String name : List.of("decimal", "negative", "below"))
+        {
+            var stats = sensors.getAsJsonObject(name);
+            double expected = name.equals("negative") ? -0.7 : name.equals("below") ? 0.6 : 0.7;
+            assertEquals(expected, stats.get("average").getAsDouble(), name);
+            assertEquals(expected, stats.get("median").getAsDouble(), name);
+            assertEquals(name.equals("below") ? 0.0 : 0.1, stats.get("std_dev").getAsDouble(), name);
+        }
         var devices = JsonParser.parseString(Files.readString(workingDirectory.resolve("devices.json")))
                 .getAsJsonObject();
         assertEquals(1, devices.getAsJsonObject("by_device").size());

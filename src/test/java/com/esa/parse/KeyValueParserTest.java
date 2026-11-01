@@ -20,10 +20,22 @@ class KeyValueParserTest
     }
 
     @Test
-    void rejectsTheWholeLineWhenAQuotedValueIsUnfinished()
+    void rejectsTheWholeLineWhenTokensOrQuotesAreMalformed()
     {
         assertEquals(Map.of(), parser.parse("severity=INFO device=\"broken lock"));
         assertEquals(Map.of(), parser.parse("sensor=temp reading=20 msg=\"broken"));
+        for (String malformed : new String[] {
+                "ts=t sensor=temp reading=20 ###CORRUPTED LINE### !!!",
+                "ts=t sensor=\"air quality\"suffix reading=20",
+                "sensor=prefix\"air quality\" reading=20",
+                "sensor=\"air\"\"quality\" reading=20",
+                "\"sensor\"=temp reading=20",
+                "sensor=temp reading=20 =missing-key"})
+        {
+            assertEquals(Map.of(), parser.parse(malformed), malformed);
+        }
+        assertEquals(Map.of("sensor", "air quality", "reading", "20"),
+                parser.parse("sensor=\"air quality\" reading=20"));
         assertEquals(Map.of("device", "lock", "severity", "INFO"),
                 parser.parse("device=lock severity=INFO"));
     }

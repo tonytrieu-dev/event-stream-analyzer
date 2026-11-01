@@ -1,5 +1,7 @@
 package com.esa.aggregate;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,25 +13,17 @@ public final class Stats
 
     public static double mean(List<Double> values)
     {
-        double sum = 0.0;
-        for (double value : values)
-        {
-            sum += value;
-        }
-        if (Double.isFinite(sum))
-        {
-            return sum / values.size();
-        }
+        return decimalMean(values).doubleValue();
+    }
 
-        // Normalize only when the intermediate sum exceeds the double range.
-        double scale = maxMagnitude(values);
-        double normalizedSum = 0.0;
+    private static BigDecimal decimalMean(List<Double> values)
+    {
+        BigDecimal sum = BigDecimal.ZERO;
         for (double value : values)
         {
-            normalizedSum += value / scale;
+            sum = sum.add(BigDecimal.valueOf(value));
         }
-        double normalizedMean = normalizedSum / values.size();
-        return Math.max(-1.0, Math.min(1.0, normalizedMean)) * scale;
+        return sum.divide(BigDecimal.valueOf(values.size()), MathContext.DECIMAL128);
     }
 
     public static double median(List<Double> values)
@@ -43,46 +37,22 @@ public final class Stats
         {
             return sorted.get(middle);
         }
-        double lower = sorted.get(middle - 1);
-        double upper = sorted.get(middle);
-        double sum = lower + upper;
-        return Double.isFinite(sum) ? sum / 2.0 : lower / 2.0 + upper / 2.0;
+        BigDecimal lower = BigDecimal.valueOf(sorted.get(middle - 1));
+        BigDecimal upper = BigDecimal.valueOf(sorted.get(middle));
+        return lower.add(upper).divide(BigDecimal.valueOf(2)).doubleValue();
     }
 
     public static double populationStdDev(List<Double> values)
     {
-        double mean = mean(values);
-        double sumOfSquaredDeviations = 0.0;
+        BigDecimal mean = decimalMean(values);
+        BigDecimal sumOfSquaredDeviations = BigDecimal.ZERO;
         for (double value : values)
         {
-            double deviation = value - mean;
-            sumOfSquaredDeviations += deviation * deviation;
+            BigDecimal deviation = BigDecimal.valueOf(value).subtract(mean);
+            sumOfSquaredDeviations = sumOfSquaredDeviations.add(deviation.multiply(deviation));
         }
-        if (Double.isFinite(sumOfSquaredDeviations))
-        {
-            return Math.sqrt(sumOfSquaredDeviations / values.size());
-        }
-
-        double scale = maxMagnitude(values);
-        double normalizedMean = mean / scale;
-        double normalizedSum = 0.0;
-        for (double value : values)
-        {
-            double deviation = value / scale - normalizedMean;
-            normalizedSum += deviation * deviation;
-        }
-        // Population standard deviation cannot exceed the largest absolute input.
-        return Math.sqrt(Math.min(1.0, normalizedSum / values.size())) * scale;
-    }
-
-    private static double maxMagnitude(List<Double> values)
-    {
-        double maximum = 0.0;
-        for (double value : values)
-        {
-            maximum = Math.max(maximum, Math.abs(value));
-        }
-        return maximum;
+        return sumOfSquaredDeviations.divide(BigDecimal.valueOf(values.size()), MathContext.DECIMAL128)
+                .sqrt(MathContext.DECIMAL128).doubleValue();
     }
 
     // Nearest-rank, deliberately not the median for even N (FR-18).

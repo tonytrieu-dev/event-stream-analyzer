@@ -16,10 +16,24 @@ public class KeyValueParser implements LineParser
             int firstEqualsIndex = token.indexOf('=');
             if (firstEqualsIndex <= 0)
             {
-                continue;
+                return Map.of();
             }
             String key = token.substring(0, firstEqualsIndex);
-            String value = unquote(token.substring(firstEqualsIndex + 1));
+            if (key.indexOf('"') >= 0)
+            {
+                return Map.of();
+            }
+            String value = token.substring(firstEqualsIndex + 1);
+            int firstQuoteIndex = value.indexOf('"');
+            if (firstQuoteIndex >= 0)
+            {
+                if (firstQuoteIndex != 0 || value.length() < 2
+                        || value.indexOf('"', 1) != value.length() - 1)
+                {
+                    return Map.of();
+                }
+                value = value.substring(1, value.length() - 1);
+            }
             fields.put(key, value);
         }
         return fields;
@@ -67,15 +81,4 @@ public class KeyValueParser implements LineParser
         currentToken.setLength(0);
     }
 
-    private static String unquote(String value)
-    {
-        boolean quoted = value.length() >= 2
-                && value.startsWith("\"")
-                && value.endsWith("\"");
-        if (!quoted)
-        {
-            return value;
-        }
-        return value.substring(1, value.length() - 1);
-    }
 }
