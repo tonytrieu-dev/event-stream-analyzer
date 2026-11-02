@@ -56,11 +56,8 @@ public final class Stats
     }
 
     // Nearest-rank, deliberately not the median for even N (FR-18).
-    public static int nearestRankPercentile(List<Integer> values, int percentile)
+    public static int nearestRankPercentile(List<Integer> sorted, int percentile)
     {
-        List<Integer> sorted = new ArrayList<>(values);
-        sorted.sort(null);
-
         int rank = (int) Math.ceil(percentile / 100.0 * sorted.size());
         int index = rank - 1;
         return sorted.get(index);

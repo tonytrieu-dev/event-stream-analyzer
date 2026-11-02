@@ -133,18 +133,21 @@ end note
 
 ' ======================= OUTPUT (Strategy) =======================
 interface OutputWriter <<Strategy>> {
-  + write(fileBase : String, data : Map<String,Object>, outDir : Path) : void
+  + write(input : Path, outDir : Path, reports : Map<String,Map<String,Object>>) : void
 }
 class JsonWriter {
   - gson : Gson
-  + write(fileBase : String, data : Map<String,Object>, outDir : Path) : void
+  + write(input : Path, outDir : Path, reports : Map<String,Map<String,Object>>) : void
+  - validateDestinations(input : Path, outputs : List<Path>) : void
 }
 note bottom of JsonWriter
   Writes JSON with two-space indentation.
   Rounds decimals to one place and removes
   decimal points from whole results.
   Empty reports contain {}. (FR-20/21)
-  A CSV writer can implement OutputWriter.
+  Resolves and preflights the complete batch
+  before changing any destination.
+  A CSV or composite writer can implement OutputWriter.
   (NFR-3)
 end note
 
@@ -178,6 +181,6 @@ DeviceAggregator ..> Severity
 AccessAggregator ..> Stats
 
 OutputWriter <|.. JsonWriter
-AnalyzerPipeline ..> OutputWriter : "writes result() per aggregator"
+AnalyzerPipeline ..> OutputWriter : "writes one report batch"
 
 @enduml

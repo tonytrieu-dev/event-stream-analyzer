@@ -34,7 +34,7 @@ The application creates the output directory if needed and writes `sensors.json`
 two-space indentation. A category with no valid records produces exactly `{}`.
 
 Invalid arguments and file errors print a message to stderr and return a nonzero
-exit code. Before processing, the application rejects report paths that point to
+exit code. Before writing reports, the application rejects report paths that point to
 the input file or to another report, including symbolic and hard links. It also
 rejects symbolic links whose targets do not exist.
 
@@ -72,7 +72,11 @@ use the results calculated from the actual input.
 Parsing, classification, aggregation, and output have separate responsibilities.
 `LineParser`, `Aggregator`, and `OutputWriter` provide the Strategy interfaces.
 `RecordFactory` handles classification through a Simple Factory. `Main` selects
-the implementations and output names, then passes them to `AnalyzerPipeline`.
+the implementations, while `AnalyzerPipeline` collects the reports and passes
+the complete batch to `OutputWriter`. The writer owns report filenames and
+preflights every destination before creating the output directory or changing a
+report. This keeps future composite formats responsible for checking all of
+their destinations together.
 
 The [design report](docs/design.pdf) explains these decisions, their trade-offs,
 and the changes needed for Network Logs, JSON Lines, and CSV. The UML source is

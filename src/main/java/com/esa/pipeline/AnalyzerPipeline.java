@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -51,9 +52,11 @@ public class AnalyzerPipeline
             }
         }
 
+        Map<String, Map<String, Object>> reports = new LinkedHashMap<>();
         for (Map.Entry<String, Aggregator> output : outputs.entrySet())
         {
-            writer.write(output.getKey(), output.getValue().result(), outputDirectory);
+            reports.put(output.getKey(), output.getValue().result());
         }
+        writer.write(inputFile, outputDirectory, reports);
     }
 }

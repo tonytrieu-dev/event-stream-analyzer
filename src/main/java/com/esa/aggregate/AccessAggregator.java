@@ -4,7 +4,6 @@ import com.esa.model.AccessRecord;
 import com.esa.model.Record;
 import com.esa.model.RecordType;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,12 +70,14 @@ public class AccessAggregator implements Aggregator
 
         private Map<String, Object> decisionTimes()
         {
+            List<Integer> sortedDurations = new ArrayList<>(durations);
+            sortedDurations.sort(null);
             Map<String, Object> times = new LinkedHashMap<>();
-            times.put("min", Collections.min(durations));
-            times.put("50_percentile", Stats.nearestRankPercentile(durations, 50));
-            times.put("90_percentile", Stats.nearestRankPercentile(durations, 90));
-            times.put("99_percentile", Stats.nearestRankPercentile(durations, 99));
-            times.put("max", Collections.max(durations));
+            times.put("min", sortedDurations.get(0));
+            times.put("50_percentile", Stats.nearestRankPercentile(sortedDurations, 50));
+            times.put("90_percentile", Stats.nearestRankPercentile(sortedDurations, 90));
+            times.put("99_percentile", Stats.nearestRankPercentile(sortedDurations, 99));
+            times.put("max", sortedDurations.get(sortedDurations.size() - 1));
             return times;
         }
 

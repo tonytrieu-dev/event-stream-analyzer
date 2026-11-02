@@ -15,8 +15,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 public final class Main
@@ -45,28 +43,6 @@ public final class Main
 
             Map<String, Aggregator> outputs = Map.of("sensors", new SensorAggregator(),
                     "devices", new DeviceAggregator(), "access", new AccessAggregator());
-            List<Path> checkedOutputs = new ArrayList<>();
-            for (String name : outputs.keySet())
-            {
-                Path output = options.outputDir().resolve(name + ".json");
-                if (Files.isSymbolicLink(output) && !Files.exists(output))
-                {
-                    return fail("Output is a dangling symbolic link: " + output);
-                }
-                if (Files.exists(output) && Files.isSameFile(options.inputFile(), output))
-                {
-                    return fail("Input file conflicts with output: " + output);
-                }
-                for (Path checked : checkedOutputs)
-                {
-                    if (Files.exists(output) && Files.exists(checked) && Files.isSameFile(output, checked))
-                    {
-                        return fail("Output files conflict: " + output + " and " + checked);
-                    }
-                }
-                checkedOutputs.add(output);
-            }
-
             AnalyzerPipeline pipeline = new AnalyzerPipeline(new KeyValueParser(), new RecordFactory(),
                     outputs, new JsonWriter());
             pipeline.run(options.inputFile(), options.outputDir());

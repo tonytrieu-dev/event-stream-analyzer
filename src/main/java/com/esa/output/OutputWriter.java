@@ -6,5 +6,6 @@ import java.util.Map;
 
 public interface OutputWriter
 {
-    void write(String fileBase, Map<String, Object> data, Path outputDirectory) throws IOException;
+    void write(Path inputFile, Path outputDirectory, Map<String, Map<String, Object>> reports)
+            throws IOException;
 }
