@@ -28,8 +28,11 @@ class StatsTest
         }
     }
 
+    // Regression guard: mean/median/std_dev must stay finite at extreme magnitudes.
+    // Sole catcher of a naive double-sum overflow; the inputs exceed the assignment's
+    // data range deliberately, so keep this even though the spec never exercises it.
     @Test
-    void keepsRepresentableStatisticsFiniteForLargeReadings()
+    void keepsStatisticsFiniteAtExtremeMagnitudesOverflowRegression()
     {
         for (double magnitude : new double[] {1e155, 1e308, Double.MAX_VALUE})
         {

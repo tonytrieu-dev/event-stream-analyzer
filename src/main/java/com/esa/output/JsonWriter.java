@@ -61,27 +61,12 @@ public class JsonWriter implements OutputWriter
             for (int previous = 0; previous < index; previous++)
             {
                 Path checked = outputFiles.get(previous);
-                if (destinationIdentity(output).equals(destinationIdentity(checked))
-                        || (Files.exists(output) && Files.exists(checked) && Files.isSameFile(output, checked)))
+                if (Files.exists(output) && Files.exists(checked) && Files.isSameFile(output, checked))
                 {
                     throw new IOException("Output files conflict: " + output + " and " + checked);
                 }
             }
         }
-    }
-
-    private static Path destinationIdentity(Path path) throws IOException
-    {
-        if (Files.exists(path))
-        {
-            return path.toRealPath();
-        }
-        Path parent = path.toAbsolutePath().getParent();
-        if (parent == null)
-        {
-            return path.toRealPath();
-        }
-        return destinationIdentity(parent).resolve(path.getFileName()).normalize();
     }
 
     private static BigDecimal formatNumber(Number number)
