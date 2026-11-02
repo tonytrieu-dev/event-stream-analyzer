@@ -38,12 +38,12 @@ class AccessAggregatorTest
 
         accept("u", "door-B", true, 99);
 
-        assertEquals(10, decisionTimes("door-A").get("min"));
-        assertEquals(60, decisionTimes("door-A").get("max"));
+        assertEquals(10, decisionTimes("door-A").get("min"), "door-A minimum duration");
+        assertEquals(60, decisionTimes("door-A").get("max"), "door-A maximum duration");
         assertEquals(35, decisionTimes("door-A").get("50_percentile"),
                 "p50 must be nearest-rank (35), not the median (37.5) (FR-18)");
-        assertEquals(55, decisionTimes("door-A").get("90_percentile"));
-        assertEquals(60, decisionTimes("door-A").get("99_percentile"));
+        assertEquals(55, decisionTimes("door-A").get("90_percentile"), "door-A nearest-rank p90");
+        assertEquals(60, decisionTimes("door-A").get("99_percentile"), "door-A nearest-rank p99");
         assertEquals(Map.of("min", 99, "50_percentile", 99, "90_percentile", 99,
                 "99_percentile", 99, "max", 99), decisionTimes("door-B"));
     }

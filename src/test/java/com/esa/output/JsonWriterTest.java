@@ -39,9 +39,10 @@ class JsonWriterTest
     @Test
     void writesWholeNumbersWithoutDecimalPointsOrExponents() throws IOException
     {
-        writer.write(inputFile(), outputDirectory, Map.of("sensors", Map.of("values", List.of(40.0, -20.0, -0.0, 40))));
+        writer.write(inputFile(), outputDirectory,
+                Map.of("sensors", Map.of("values", List.of(40.0, -20.0, -0.0, 40, 1e18))));
 
-        assertEquals("[40,-20,0,40]", JsonParser.parseString(
+        assertEquals("[40,-20,0,40,1000000000000000000]", JsonParser.parseString(
                 Files.readString(outputDirectory.resolve("sensors.json")))
                 .getAsJsonObject().getAsJsonArray("values").toString());
     }

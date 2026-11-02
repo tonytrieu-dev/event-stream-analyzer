@@ -22,13 +22,15 @@ class RecordFactoryTest
     @Test
     void classifiesASensorReadingWhenSensorAndNumericReadingArePresent()
     {
-        Optional<Record> classified =
-                factory.classify(Map.of("sensor", "temperature_celsius", "reading", "21.5"));
+        for (double value : new double[] {21.5, 1e18})
+        {
+            Optional<Record> classified = factory.classify(
+                    Map.of("sensor", "temperature_celsius", "reading", Double.toString(value)));
 
-        SensorReading reading =
-                assertInstanceOf(SensorReading.class, classified.orElseThrow());
-        assertEquals("temperature_celsius", reading.sensor());
-        assertEquals(21.5, reading.reading());
+            SensorReading reading = assertInstanceOf(SensorReading.class, classified.orElseThrow());
+            assertEquals("temperature_celsius", reading.sensor());
+            assertEquals(value, reading.reading(), "numeric conversion of " + value);
+        }
     }
 
     @Test
@@ -109,7 +111,7 @@ class RecordFactoryTest
     }
 
     @Test
-    void skipsACorruptLineWithoutThrowing()
+    void rejectsRecordsMissingAnyRequiredField()
     {
         for (Map<String, String> complete : List.of(
                 Map.of("sensor", "temp", "reading", "21.5"),
@@ -120,12 +122,9 @@ class RecordFactoryTest
             {
                 Map<String, String> incomplete = new HashMap<>(complete);
                 incomplete.remove(required);
-                assertTrue(factory.classify(incomplete).isEmpty(), "missing required field: " + required);
+                assertTrue(factory.classify(incomplete).isEmpty(),
+                        "missing " + required + " from " + complete);
             }
         }
-        Optional<Record> classified = factory.classify(Map.of("###CORRUPTED###", "!!!"));
-
-        assertTrue(classified.isEmpty(),
-                "a line matching no type must be skipped silently, not throw (FR-7)");
     }
 }

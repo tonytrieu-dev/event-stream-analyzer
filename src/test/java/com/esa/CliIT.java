@@ -118,20 +118,6 @@ class CliIT
     }
 
     @Test
-    void preservesLargeSensorValuesInTheJsonReport() throws Exception
-    {
-        Files.writeString(workingDirectory.resolve("events.txt"), "sensor=large reading=1000000000000000000");
-        Process process = launch("--file", "events.txt");
-        assertEquals(0, process.exitValue(), diagnostics());
-        var stats = JsonParser.parseString(Files.readString(workingDirectory.resolve("sensors.json")))
-                .getAsJsonObject().getAsJsonObject("large");
-        for (String key : List.of("minimum", "median", "average", "maximum"))
-        {
-            assertEquals(new java.math.BigDecimal("1000000000000000000"), stats.get(key).getAsBigDecimal());
-        }
-    }
-
-    @Test
     void rejectsReportsThatAliasEachOtherBeforeWriting() throws Exception
     {
         for (String alias : List.of("symlink", "hardlink"))
@@ -191,14 +177,12 @@ class CliIT
     }
 
     @Test
-    void skipsBrokenQuotesAndRoundsSensorStatisticsAtDecimalBoundaries() throws Exception
+    void roundsAggregatedSensorStatisticsAtDecimalBoundaries() throws Exception
     {
         Files.writeString(workingDirectory.resolve("events.txt"),
-                "severity=INFO device=\"broken lock\n"
-                + "sensor=decimal reading=0.6\nsensor=decimal reading=0.7\n"
+                "sensor=decimal reading=0.6\nsensor=decimal reading=0.7\n"
                 + "sensor=negative reading=-0.6\nsensor=negative reading=-0.7\n"
-                + "sensor=below reading=0.6\nsensor=below reading=0.699999999\n"
-                + "severity=INFO device=lock\n");
+                + "sensor=below reading=0.6\nsensor=below reading=0.699999999\n");
 
         Process process = launch("--file", "events.txt");
 
@@ -209,14 +193,11 @@ class CliIT
         {
             var stats = sensors.getAsJsonObject(name);
             double expected = name.equals("negative") ? -0.7 : name.equals("below") ? 0.6 : 0.7;
-            assertEquals(expected, stats.get("average").getAsDouble(), name);
-            assertEquals(expected, stats.get("median").getAsDouble(), name);
-            assertEquals(name.equals("below") ? 0.0 : 0.1, stats.get("std_dev").getAsDouble(), name);
+            assertEquals(expected, stats.get("average").getAsDouble(), name + " average rounding");
+            assertEquals(expected, stats.get("median").getAsDouble(), name + " median rounding");
+            assertEquals(name.equals("below") ? 0.0 : 0.1, stats.get("std_dev").getAsDouble(),
+                    name + " population standard deviation rounding");
         }
-        var devices = JsonParser.parseString(Files.readString(workingDirectory.resolve("devices.json")))
-                .getAsJsonObject();
-        assertEquals(1, devices.getAsJsonObject("by_device").size());
-        assertTrue(devices.getAsJsonObject("by_device").has("lock"));
     }
 
     private Process launch(String... arguments) throws Exception

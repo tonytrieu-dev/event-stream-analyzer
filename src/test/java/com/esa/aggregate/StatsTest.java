@@ -34,14 +34,16 @@ class StatsTest
         for (double magnitude : new double[] {1e155, 1e308, Double.MAX_VALUE})
         {
             List<Double> opposite = List.of(magnitude, -magnitude);
-            assertEquals(0.0, Stats.mean(opposite));
-            assertEquals(0.0, Stats.median(opposite));
-            assertEquals(magnitude, Stats.populationStdDev(opposite), magnitude * 1e-14);
+            assertEquals(0.0, Stats.mean(opposite), "mean of opposite readings at " + magnitude);
+            assertEquals(0.0, Stats.median(opposite), "median of opposite readings at " + magnitude);
+            assertEquals(magnitude, Stats.populationStdDev(opposite), magnitude * 1e-14,
+                    "population standard deviation of opposite readings at " + magnitude);
 
             List<Double> identical = List.of(magnitude, magnitude);
-            assertEquals(magnitude, Stats.mean(identical));
-            assertEquals(magnitude, Stats.median(identical));
-            assertEquals(0.0, Stats.populationStdDev(identical));
+            assertEquals(magnitude, Stats.mean(identical), "mean of identical readings at " + magnitude);
+            assertEquals(magnitude, Stats.median(identical), "median of identical readings at " + magnitude);
+            assertEquals(0.0, Stats.populationStdDev(identical),
+                    "population standard deviation of identical readings at " + magnitude);
         }
     }
 }

@@ -41,8 +41,8 @@ class SensorAggregatorTest
         accept("temp", 20.0);
 
         Map<String, Object> stats = statsFor("temp");
-        assertEquals(10.0, stats.get("minimum"));
-        assertEquals(60.0, stats.get("maximum"));
+        assertEquals(10.0, stats.get("minimum"), "minimum reading");
+        assertEquals(60.0, stats.get("maximum"), "maximum reading");
         assertEquals(20.0, stats.get("median"), "median key must carry the median");
         assertEquals(30.0, stats.get("average"), "average key must carry the mean");
         assertEquals(21.602468994692867, (double) stats.get("std_dev"), 1e-12,
