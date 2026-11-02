@@ -34,9 +34,10 @@ The application creates the output directory if needed and writes `sensors.json`
 two-space indentation. A category with no valid records produces exactly `{}`.
 
 Invalid arguments and file errors print a message to stderr and return a nonzero
-exit code. Before writing reports, the application rejects report paths that point to
-the input file or to another report, including symbolic and hard links. It also
-rejects symbolic links whose targets do not exist.
+exit code. Before writing reports, the application rejects a report path that
+resolves to the input file (so it never overwrites your input, even through a
+symbolic or hard link) or to another report that is the same file, including hard
+links. It also rejects an output path that is a symbolic link with no target.
 
 Maven manages the dependencies: Gson for JSON output and JUnit 5 for tests.
 
