@@ -8,12 +8,10 @@ import org.junit.jupiter.api.Test;
 
 class StatsTest
 {
-    private static final double EXACT = 0.0;
-
     @Test
     void medianOfAnEvenCountAveragesTheTwoMiddleValues()
     {
-        assertEquals(25.0, Stats.median(List.of(10.0, 20.0, 30.0, 40.0)), EXACT,
+        assertEquals(25.0, Stats.median(List.of(10.0, 20.0, 30.0, 40.0)),
                 "even N median must be the average of the two middle values (FR-11)");
     }
 

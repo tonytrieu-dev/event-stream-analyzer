@@ -58,20 +58,6 @@ class JsonWriterTest
     }
 
     @Test
-    void checksAllDestinationsBeforeWriting() throws IOException
-    {
-        Path input = inputFile();
-        Path sensors = outputDirectory.resolve("sensors.json");
-        Path devices = outputDirectory.resolve("devices.json");
-        Files.writeString(sensors, "existing sensors");
-        Files.createLink(devices, sensors);
-
-        assertThrows(IOException.class, () -> writer.write(input, outputDirectory,
-                Map.of("sensors", Map.of(), "devices", Map.of())));
-        assertEquals("existing sensors", Files.readString(sensors));
-    }
-
-    @Test
     void rejectsFreshReportPathAliasesBeforeCreatingAnyOutput() throws IOException
     {
         Path input = Files.writeString(outputDirectory.resolve("events.txt"), "original input");

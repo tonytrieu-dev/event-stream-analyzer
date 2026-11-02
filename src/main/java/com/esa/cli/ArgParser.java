@@ -2,15 +2,12 @@ package com.esa.cli;
 
 import java.nio.file.Path;
 
-// Throws rather than exiting so the parser stays unit-testable; Main owns termination.
 public class ArgParser
 {
-    private static final Path CURRENT_DIRECTORY = Path.of(".");
-
     public CliOptions parse(String[] args)
     {
         Path inputFile = null;
-        Path outputDir = CURRENT_DIRECTORY;
+        Path outputDir = Path.of(".");
 
         int index = 0;
         while (index < args.length)

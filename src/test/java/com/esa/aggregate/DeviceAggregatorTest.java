@@ -43,8 +43,6 @@ class DeviceAggregatorTest
     @Test
     void breaksATieByChoosingTheHighestSeverityRegardlessOfOrderSeen()
     {
-        // INFO is accepted first but ERROR is higher severity, so ERROR must win
-        // the count tie. Seeing INFO first means a naive first-seen tie-break fails.
         accept("door-lock-07", Severity.INFO);
         accept("door-lock-07", Severity.ERROR);
 
@@ -55,8 +53,6 @@ class DeviceAggregatorTest
     @Test
     void countOutweighsSeverityWhenCountsDiffer()
     {
-        // INFO (lowest severity) occurs twice vs CRITICAL (highest) once: count wins,
-        // so a "just pick the highest severity" bug would wrongly return CRITICAL.
         accept("sensor-hub", Severity.INFO);
         accept("sensor-hub", Severity.INFO);
         accept("sensor-hub", Severity.CRITICAL);

@@ -14,7 +14,6 @@ import com.esa.pipeline.AnalyzerPipeline;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
 import java.util.Map;
 
 public final class Main

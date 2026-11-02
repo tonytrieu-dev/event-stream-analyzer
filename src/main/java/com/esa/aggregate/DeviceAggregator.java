@@ -69,8 +69,6 @@ public class DeviceAggregator implements Aggregator
         return summary;
     }
 
-    // Highest count wins; ties go to the highest severity, which is the lowest
-    // enum ordinal since Severity is declared CRITICAL first (FR-14).
     private static Severity mostFrequentSeverity(Map<Severity, Integer> severityCounts)
     {
         Severity winner = null;
